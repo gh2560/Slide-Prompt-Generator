@@ -54,8 +54,8 @@ def login(data: UserLogin, response: Response, db: Session = Depends(get_db)):
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=settings.is_production,
-        samesite="lax",
+        secure=True,
+        samesite="none",
         max_age=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
     return user
@@ -175,8 +175,8 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=settings.is_production,
-        samesite="lax",
+        secure=True,
+        samesite="none",
         max_age=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
     return response
