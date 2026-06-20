@@ -9,6 +9,7 @@ pydantic-settings==2.14.1
 
 # Database
 sqlalchemy==2.0.50
+psycopg2-binary==2.9.10
 
 # LLM
 google-genai==2.8.0
