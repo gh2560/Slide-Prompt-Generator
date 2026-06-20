@@ -78,6 +78,9 @@ class Settings(BaseSettings):
     SMTP_FROM_EMAIL: str = ""        # email người gửi hiển thị
     SMTP_FROM_NAME: str = "Prompt Builder"
 
+    # ── Resend API (thay thế SMTP, không bị chặn trên cloud) ──────────────
+    RESEND_API_KEY: str = ""
+
     # ── OCR (Tesseract/Poppler) ─────────────────────────────────────────
     # Để trống = dùng binary trong PATH (mặc định trên Linux/Docker).
     # Set giá trị nếu Tesseract/Poppler không nằm trong PATH (vd: Windows).

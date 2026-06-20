@@ -1,22 +1,18 @@
 """
-services/email_service.py — Gửi email qua SMTP.
+services/email_service.py — Gửi email qua Resend API.
 
 Cách dùng:
-- Nếu chưa config SMTP (settings.smtp_enabled == False) → chỉ in link ra console
-- Đã config → gửi email thật qua smtplib
+- Nếu chưa config RESEND_API_KEY → chỉ in link ra console
+- Đã config → gửi email thật qua Resend HTTP API
 
-Để bật SMTP qua Gmail:
-1. Bật 2FA cho Google account
-2. Tạo App Password tại https://myaccount.google.com/apppasswords
-3. Set trong .env:
-   SMTP_USER=your.email@gmail.com
-   SMTP_PASSWORD=<app-password-16-ký-tự>
-   SMTP_FROM_EMAIL=your.email@gmail.com
+Để bật Resend:
+1. Đăng ký tại https://resend.com (free tier: 3000 email/tháng)
+2. Lấy API key
+3. Set trong .env / Railway Variables:
+   RESEND_API_KEY=re_xxxxxxxxxxxx
+   SMTP_FROM_EMAIL=onboarding@resend.dev  (hoặc domain đã verify)
 """
 import logging
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 
 from utils.config import get_settings
 
@@ -26,32 +22,30 @@ settings = get_settings()
 
 def send_email(to_email: str, subject: str, html_body: str, text_body: str = "") -> bool:
     """
-    Gửi email qua SMTP.
+    Gửi email qua Resend API.
     Return True nếu gửi thành công, False nếu fail hoặc chưa config.
-
-    Trong dev mode (chưa config SMTP) → chỉ log ra console, return False.
     """
-    if not settings.smtp_enabled:
-        logger.info(f"[DEV - SMTP disabled] Would send to {to_email}: {subject}")
+    if not settings.RESEND_API_KEY:
+        logger.info(f"[DEV - Resend disabled] Would send to {to_email}: {subject}")
         return False
 
-    from_email = settings.SMTP_FROM_EMAIL or settings.SMTP_USER
-    from_name = settings.SMTP_FROM_NAME
-
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"] = f"{from_name} <{from_email}>"
-    msg["To"] = to_email
-
-    if text_body:
-        msg.attach(MIMEText(text_body, "plain", "utf-8"))
-    msg.attach(MIMEText(html_body, "html", "utf-8"))
-
     try:
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as server:
-            server.starttls()
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            server.send_message(msg)
+        import resend
+        resend.api_key = settings.RESEND_API_KEY
+
+        from_email = settings.SMTP_FROM_EMAIL or "onboarding@resend.dev"
+        from_name = settings.SMTP_FROM_NAME
+
+        params = {
+            "from": f"{from_name} <{from_email}>",
+            "to": [to_email],
+            "subject": subject,
+            "html": html_body,
+        }
+        if text_body:
+            params["text"] = text_body
+
+        resend.Emails.send(params)
         logger.info(f"Email sent to {to_email}: {subject}")
         return True
     except Exception as e:

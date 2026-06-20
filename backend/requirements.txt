@@ -28,6 +28,7 @@ httpx==0.28.1
 
 # Misc
 python-dotenv==1.2.2
+resend==2.10.0
 
 # Local OCR
 pytesseract==0.3.13
